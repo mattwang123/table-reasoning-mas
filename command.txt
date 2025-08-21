@@ -1,0 +1,3 @@
+ salloc --partition gpu-a100 --account a100acct --gpus=1
+ srun --pty bash -i
+ salloc --partition gpu-a100 --account a100acct --exclude e01,e02,e03,e04 --gpus=2

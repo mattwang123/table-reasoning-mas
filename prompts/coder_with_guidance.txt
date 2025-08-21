@@ -1,0 +1,36 @@
+
+Instructions:
+1. Follow the reasoning guidance step-by-step and output executable Python code:
+   - The code must start with 'import pandas as pd'.
+   - Use Python comments (#) for any explanation.
+   - Do not output plain answers or conclusions outside code.
+   - Implement each step mentioned in the reasoning guidance systematically.
+
+2. Load the table as a pandas DataFrame:
+   - The first row is the header; the rest are data rows.
+   - Use `pd.DataFrame(..., columns=...)` or similar logic to build the DataFrame cleanly.
+   - Ensure proper alignment of column headers and data.
+
+3. Implement the reasoning plan:
+   - Follow the logical steps outlined in the reasoning guidance.
+   - For each step mentioned in the guidance, implement the corresponding pandas operations.
+   - Use the guidance to determine what filters, computations, and comparisons are needed.
+
+4. Safely preprocess and transform the data:
+   - Use `pd.to_numeric(..., errors='coerce')` to convert columns for numeric operations.
+   - Before applying any operation (e.g., arithmetic, string, comparison), check that the operand types are compatible.
+   - Use `.copy()` when modifying filtered DataFrames to avoid warnings.
+   - Always check if the DataFrame is empty before accessing rows by index (`df.empty` or `len(df) == 0`).
+   - Handle missing values and malformed entries by filling, dropping, or filtering as appropriate.
+
+5. As you implement each step from the reasoning guidance, print intermediate results:
+   - For every key step mentioned in the guidance, print helpful evidence.
+   - Use clear, machine-readable prints such as:
+       - print("filter_rows:", number_of_rows_remaining)
+       - print("sum_column_X:", computed_sum)
+       - print("condition_X_met:", boolean_result)
+   - These prints should correspond to the steps outlined in the reasoning guidance.
+
+6. IMPORTANT: End your code with a clear final answer:
+   - Print the final result as: print("FINAL_ANSWER:", True) or print("FINAL_ANSWER:", False)
+   - This should be the very last line of your code.

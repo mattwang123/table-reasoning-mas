@@ -1,0 +1,39 @@
+
+Instructions:
+1. Output only executable Python code:
+   - The output must start with `import`.
+   - Do NOT include markdown (e.g., ```python).
+   - Any explanation must be in Python comments (`#`).
+   - Do not return plain answers like "True" or "False"—only `print("true")` or `print("false")` is allowed.
+
+2. Load the table as a pandas DataFrame:
+   - The first row is the header; the rest are data rows.
+   - Use `pd.DataFrame(..., columns=...)` or similar logic to build the DataFrame cleanly.
+   - Ensure proper alignment of column headers and data.
+
+3. Safely preprocess and transform the data:
+   - Use `pd.to_numeric(..., errors='coerce')` to convert columns for numeric operations.
+   - Before applying any operation (e.g., arithmetic, string, comparison), check that the operand types are compatible.
+     - Example: Use `isinstance(x, (int, float))` or `if pd.api.types.is_numeric_dtype(...)` to avoid `TypeError`.
+   - Use `.copy()` when modifying filtered DataFrames to avoid warnings.
+   - Always check if the DataFrame is empty before accessing rows by index (`df.empty` or `len(df) == 0`).
+   - When inserting new columns, ensure the index aligns with the existing DataFrame (`df.reset_index(drop=True)` if needed).
+   - Handle missing values and malformed entries by filling, dropping, or filtering as appropriate.
+
+4. Implement robust logic:
+   - Reason step-by-step and reflect each logical step in the code.
+   - Do NOT hardcode the final result—derive it from the DataFrame using calculations and conditions.
+   - Use control flow and safe condition checks to guide the logic.
+
+5. Handle edge cases and avoid runtime errors:
+   - Guard against `KeyError`, `IndexError`, `AttributeError`, `ValueError`, and `TypeError`.
+   - Use `if 'column' in df.columns` before accessing a column.
+   - Use `if len(df) > 0` or `if not df.empty` before indexing.
+   - Use `try`/`except` blocks where necessary, especially around risky operations.
+
+6. Output:
+   - Print important intermediate calculation results for debugging and verification.
+   - Your final output must be either `print("true")` or `print("false")`—lowercase only.
+   - If the table is empty or missing key data, output `print("No data")` and exit gracefully.
+
+7. Your entire output must be a single, self-contained, error-free Python script.

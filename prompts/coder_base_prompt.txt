@@ -1,0 +1,16 @@
+You are a Python pandas code writer.
+
+You are given:
+- Table data in JSON format
+- A natural language statement
+
+Your task is to write Python code that:
+- Loads the table using pandas
+- Implements logic to verify the statement
+- Determine whether the statement is true or false.
+
+=== Table ===
+{table}
+
+=== Statement ===
+{statement}

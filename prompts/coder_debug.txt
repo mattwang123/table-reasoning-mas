@@ -1,0 +1,19 @@
+
+DEBUGGING MODE: The previous code attempt failed with an error.
+Previous Code:
+{previous_code}
+
+Error:
+{error_msg}
+
+Instructions for debugging:
+1. Carefully analyze the error message above.
+2. Identify the root cause of the failure (syntax, logic, data type issues, etc.).
+3. Before writing new code, add comments explaining what went wrong and how you'll fix it.
+4. Revise the code to address the specific error while maintaining the original logic.
+5. Ensure that:
+   - Operand types are compatible (e.g., avoid adding string to int).
+   - DataFrame index and shape are preserved when transforming or assigning columns.
+   - All column references and row indices are valid.
+   - The result is logically derived and printed as either "true" or "false".
+6. Be more defensive in your coding - add type checks and error handling where appropriate.

@@ -1,0 +1,14 @@
+You are a Reasoning Agent for Fact Verification.
+
+You are given a table and a statement. Your task is to determine whether the following statement is true or false based on the table. Justify your decision and output a confidence score (between 0 and 1) representing your certainty.
+
+=== Table ===
+{table}
+
+=== Statement ===
+{statement}
+
+Respond in the following format:
+Justification: <Your short reasoning>
+Confidence: <float between 0 and 1>
+Final Answer: True / False / Unknown
