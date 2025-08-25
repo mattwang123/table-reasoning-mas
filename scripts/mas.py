@@ -199,7 +199,13 @@ def extract_code_prediction(code_output: str) -> int:
 
 def query_llm(pipe, prompt: str, max_tokens: int = MAX_NEW_TOKEN) -> str:
     try:
-        response = pipe(prompt, max_new_tokens=max_tokens)[0]["generated_text"]
+        response = pipe(
+            prompt, 
+            max_new_tokens=max_tokens,
+            temperature=0.1,  # Explicit temperature setting
+            top_p=0.9,       # Add nucleus sampling
+            do_sample=True   # Enable sampling
+        )[0]["generated_text"]
         result = response[len(prompt):].strip()
         return result
     except Exception as e:
