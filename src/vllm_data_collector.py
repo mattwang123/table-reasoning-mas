@@ -546,73 +546,70 @@ class VllmDataCollector:
             json.dump(analysis, f, indent=2)
     
     def _analyze_combined_results(self, results: List[Dict]):
-        """Analyze combined results"""
+        """Analyze combined results using exact same method as original"""
         
         if not results:
             self.logger.info("No combined results to analyze")
             return
         
-        n = len(results)
+        # Use the exact same analysis function from original
+        from utils_vllm import analyze_agreement, print_analysis, log_to_file
         
-        reasoning_correct = sum(1 for r in results if r["metadata"]["reasoning_correct"])
-        code_correct = sum(1 for r in results if r["metadata"]["code_correct"])
-        methods_agree = sum(1 for r in results if r["methods_agree"])
+        stats = analyze_agreement(results)
         
-        both_correct = sum(1 for r in results if r["metadata"]["agreement_type"] == "both_correct")
-        both_wrong = sum(1 for r in results if r["metadata"]["agreement_type"] == "both_wrong")
-        reasoning_correct_code_wrong = sum(1 for r in results if r["metadata"]["agreement_type"] == "reasoning_correct")
-        code_correct_reasoning_wrong = sum(1 for r in results if r["metadata"]["agreement_type"] == "code_correct")
+        # Log using exact same format as original
+        log_file = f"{self.config['output_dir']}/combined_analysis_{self.timestamp}.log"
+        print_analysis(stats, log_file)
         
-        debug_counts = [r["debug_attempts"] for r in results]
-        avg_debug = sum(debug_counts) / len(debug_counts) if debug_counts else 0
-        
+        # Also log to main logger with enhanced info
         self.logger.info("COMBINED RESULTS SUMMARY")
-        self.logger.info(f"Total Samples: {n}")
-        self.logger.info(f"Reasoning Accuracy: {reasoning_correct/n:.3f} ({reasoning_correct}/{n})")
-        self.logger.info(f"Code Accuracy: {code_correct/n:.3f} ({code_correct}/{n})")
-        self.logger.info(f"Agreement Rate: {methods_agree/n:.3f} ({methods_agree}/{n})")
-        self.logger.info(f"Both Correct: {both_correct}")
-        self.logger.info(f"Both Wrong: {both_wrong}")
-        self.logger.info(f"Reasoning Correct, Code Wrong: {reasoning_correct_code_wrong}")
-        self.logger.info(f"Code Correct, Reasoning Wrong: {code_correct_reasoning_wrong}")
-        self.logger.info(f"Average Debug Rounds: {avg_debug:.2f}")
+        self.logger.info(f"Total Samples: {stats['total_samples']}")
+        self.logger.info(f"Final Accuracy: {stats['final_accuracy']:.3f}")
+        self.logger.info(f"Reasoning Accuracy: {stats['reasoning_accuracy']:.3f}")
+        self.logger.info(f"Code Accuracy: {stats['code_accuracy']:.3f}")
+        self.logger.info(f"Verifier Accuracy: {stats['verifier_accuracy']:.3f}")
+        self.logger.info(f"Agreement Rate: {stats['agreement_rate']:.3f}")
+        self.logger.info(f"Both Correct: {stats['both_correct']}")
+        self.logger.info(f"Both Wrong: {stats['both_incorrect']}")
+        self.logger.info(f"Reasoning Correct, Code Wrong: {stats['disagree_reasoning_correct']}")
+        self.logger.info(f"Code Correct, Reasoning Wrong: {stats['disagree_code_correct']}")
         
-        # Save analysis
-        analysis = {
-            "agent_type": "combined",
-            "total_samples": n,
-            "reasoning_accuracy": reasoning_correct / n,
-            "code_accuracy": code_correct / n,
-            "agreement_rate": methods_agree / n,
-            "both_correct": both_correct,
-            "both_wrong": both_wrong,
-            "reasoning_correct_code_wrong": reasoning_correct_code_wrong,
-            "code_correct_reasoning_wrong": code_correct_reasoning_wrong,
-            "avg_debug_rounds": avg_debug,
-            "max_debug_rounds": max(debug_counts) if debug_counts else 0
-        }
-        
+        # Save analysis as JSON
         analysis_file = f"{self.config['output_dir']}/combined_analysis_{self.timestamp}.json"
         with open(analysis_file, 'w') as f:
-            json.dump(analysis, f, indent=2)
+            json.dump(stats, f, indent=2)
 
 def combine_separate_results(reasoning_file: str, coder_file: str, output_dir: str, 
                            dataset_path: str, target_samples: int = None) -> str:
-    """Utility function to combine results from separate runs"""
+    """Utility function to combine results from separate runs with reanalysis"""
+    
+    from utils_vllm import normalize_prediction, extract_code_prediction, analyze_agreement, print_analysis
     
     print("Loading reasoning results...")
     reasoning_results = []
     with open(reasoning_file, 'r') as f:
         for line in f:
             if line.strip():
-                reasoning_results.append(json.loads(line))
+                result = json.loads(line)
+                if not result.get("processing_failed", False):
+                    # RE-ANALYZE reasoning prediction with new utils
+                    original_output = result["reasoning_output"]
+                    new_prediction = normalize_prediction(original_output)
+                    result["reasoning_prediction"] = new_prediction  # Update with reanalyzed prediction
+                    reasoning_results.append(result)
     
     print("Loading coder results...")
     coder_results = []
     with open(coder_file, 'r') as f:
         for line in f:
             if line.strip():
-                coder_results.append(json.loads(line))
+                result = json.loads(line)
+                if not result.get("processing_failed", False):
+                    # RE-ANALYZE code prediction with new utils
+                    code_output = result["code_output"]
+                    new_prediction = extract_code_prediction(code_output)
+                    result["code_prediction"] = new_prediction  # Update with reanalyzed prediction
+                    coder_results.append(result)
     
     print("Loading original samples...")
     with open(dataset_path, 'r') as f:
@@ -621,15 +618,94 @@ def combine_separate_results(reasoning_file: str, coder_file: str, output_dir: s
     if target_samples:
         all_samples = all_samples[:target_samples]
     
-    # Create temporary collector for combination logic
-    config = {"output_dir": output_dir}
-    collector = VllmDataCollector(config)
+    # Create lookup dictionaries
+    reasoning_lookup = {r["sample_id"]: r for r in reasoning_results}
+    coder_lookup = {r["sample_id"]: r for r in coder_results}
     
-    print("Combining results...")
-    combined_results = collector._combine_agent_results(reasoning_results, coder_results, all_samples, output_dir)
+    print("Combining results with reanalyzed predictions...")
+    final_results = []
     
+    for sample_id in reasoning_lookup.keys():
+        if sample_id in coder_lookup:
+            reasoning_result = reasoning_lookup[sample_id]
+            coder_result = coder_lookup[sample_id]
+            
+            # Calculate agreement metrics with reanalyzed predictions
+            reasoning_pred = reasoning_result["reasoning_prediction"]
+            code_pred = coder_result["code_prediction"]
+            label = reasoning_result["label"]
+            
+            methods_agree = (reasoning_pred == code_pred)
+            reasoning_correct = (reasoning_pred == label)
+            code_correct = (code_pred == label)
+            
+            if reasoning_correct and code_correct:
+                agreement_type = "both_correct"
+            elif not reasoning_correct and not code_correct:
+                agreement_type = "both_wrong"
+            elif reasoning_correct and not code_correct:
+                agreement_type = "reasoning_correct"
+            else:
+                agreement_type = "code_correct"
+            
+            # Build combined result
+            combined_result = {
+                "sample_id": sample_id,
+                "statement": reasoning_result["statement"],
+                "table_text": reasoning_result["table_text"],
+                "label": label,
+                
+                # Reanalyzed results
+                "reasoning_output": reasoning_result["reasoning_output"],
+                "reasoning_prediction": reasoning_pred,
+                "code_output": coder_result["code_output"],
+                "code_prediction": code_pred,
+                "code_error": coder_result["code_error"],
+                "debug_attempts": coder_result.get("debug_attempts", 0),
+                "extracted_code": coder_result.get("extracted_code", ""),
+                "raw_code_output": coder_result.get("raw_code_output", ""),
+                
+                # Agreement metrics
+                "methods_agree": methods_agree,
+                
+                # Metadata
+                "metadata": {
+                    "reasoning_correct": reasoning_correct,
+                    "code_correct": code_correct,
+                    "agreement_type": agreement_type,
+                    "reasoning_time": reasoning_result.get("processing_time", 0),
+                    "coder_time": coder_result.get("processing_time", 0),
+                    "total_time": reasoning_result.get("processing_time", 0) + coder_result.get("processing_time", 0)
+                }
+            }
+            
+            final_results.append(combined_result)
+    
+    # Save combined results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{output_dir}/manual_combined_{timestamp}.jsonl"
+    output_file = f"{output_dir}/reanalyzed_combined_{timestamp}.jsonl"
     
-    print(f"Combined results saved to: {output_file}")
+    print(f"Saving {len(final_results)} combined results...")
+    with open(output_file, 'w', encoding='utf-8') as f:
+        for result in final_results:
+            json.dump(result, f, ensure_ascii=False)
+            f.write('\n')
+    
+    # Run analysis with reanalyzed predictions
+    print("Running analysis with reanalyzed predictions...")
+    stats = analyze_agreement(final_results)
+    
+    # Print and save analysis
+    log_file = f"{output_dir}/reanalysis_{timestamp}.log"
+    print_analysis(stats, log_file)
+    
+    # Save as JSON
+    json_file = f"{output_dir}/reanalysis_{timestamp}.json"
+    with open(json_file, 'w') as f:
+        json.dump(stats, f, indent=2)
+    
+    print(f"Analysis saved to:")
+    print(f"  Log: {log_file}")
+    print(f"  JSON: {json_file}")
+    
     return output_file

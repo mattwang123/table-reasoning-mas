@@ -38,27 +38,68 @@ def main():
         "enable_debug": True,
         "debug_rounds": 3,
         "max_tokens": 3000,
+        
+        # NEW: Reanalysis mode - set to True to skip data collection and just analyze existing files
+        "reanalysis_mode": True,  # Set to True to reanalyze existing data
+        "reasoning_file": "data/deterministic_training/reasoning_results_20250821_224257.jsonl",  # UPDATE THIS
+        "coder_file": "data/deterministic_training/coder_results_20250821_210641.jsonl",          # UPDATE THIS
     }
     
-    # Verify indices file exists
-    if not os.path.exists(config["indices_file"]):
-        print(f"ERROR: Indices file not found: {config['indices_file']}")
-        print("Please run: python scripts/generate_sample_indices.py")
-        return
-    
-    os.makedirs(config["output_dir"], exist_ok=True)
-    
-    # Initialize collector
-    collector = VllmDataCollector(config)
-    
-    # Collect data (no dataset_path needed - using indices file)
-    results, output_file = collector.collect_data(config["output_dir"])
-    
-    print(f"Completed!")
-    print(f"Agent type: {config['agent_type']}")
-    print(f"Indices file: {config['indices_file']}")
-    print(f"Results: {len(results)} samples")
-    print(f"Output file: {output_file}")
+    if config.get("reanalysis_mode", False):
+        # REANALYSIS MODE - just combine and analyze existing files
+        print("Running in REANALYSIS MODE")
+        
+        reasoning_file = config["reasoning_file"]
+        coder_file = config["coder_file"]
+        
+        # Check files exist
+        if not os.path.exists(reasoning_file):
+            print(f"ERROR: Reasoning file not found: {reasoning_file}")
+            return
+        
+        if not os.path.exists(coder_file):
+            print(f"ERROR: Coder file not found: {coder_file}")
+            return
+        
+        print(f"Combining and analyzing:")
+        print(f"  Reasoning: {reasoning_file}")
+        print(f"  Coder: {coder_file}")
+        
+        # Use existing combine function - this will do the reanalysis
+        combined_file = combine_separate_results(
+            reasoning_file=reasoning_file,
+            coder_file=coder_file,
+            output_dir=config["output_dir"],
+            dataset_path="data/tabfact_clean/train.jsonl",  # Not used in combine, just for compatibility
+            target_samples=None
+        )
+        
+        print(f"Completed reanalysis!")
+        print(f"Combined file: {combined_file}")
+        
+    else:
+        # NORMAL DATA COLLECTION MODE - original code unchanged
+        print("Running in DATA COLLECTION MODE")
+        
+        # Verify indices file exists
+        if not os.path.exists(config["indices_file"]):
+            print(f"ERROR: Indices file not found: {config['indices_file']}")
+            print("Please run: python scripts/generate_sample_indices.py")
+            return
+        
+        os.makedirs(config["output_dir"], exist_ok=True)
+        
+        # Initialize collector
+        collector = VllmDataCollector(config)
+        
+        # Collect data (no dataset_path needed - using indices file)
+        results, output_file = collector.collect_data(config["output_dir"])
+        
+        print(f"Completed!")
+        print(f"Agent type: {config['agent_type']}")
+        print(f"Indices file: {config['indices_file']}")
+        print(f"Results: {len(results)} samples")
+        print(f"Output file: {output_file}")
 
 if __name__ == "__main__":
     main()
