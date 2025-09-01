@@ -179,9 +179,6 @@ class VllmDataCollector:
             return self._run_both_agents(samples, output_dir)
         else:
             raise ValueError(f"Unknown agent_type: {self.agent_type}. Use 'reasoning', 'coder', or 'both'")
-
-    # ... rest of the methods stay the same as before ...
-    # (I'll include the key ones below for completeness)
     
     def _run_reasoning_only(self, samples: List[Dict], output_dir: str) -> Tuple[List[Dict], str]:
         """Run only reasoning agent"""
