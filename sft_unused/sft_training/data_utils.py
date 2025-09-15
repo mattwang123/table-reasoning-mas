@@ -293,13 +293,18 @@ def prepare_datasets(config, tokenizer: PreTrainedTokenizer) -> Tuple[Dataset, D
         remove_columns=columns_to_remove,
         desc="Tokenizing train data"
     )
-    
-    eval_dataset = eval_dataset.map(
-        tokenize_batch,
-        batched=True,
-        remove_columns=columns_to_remove,
-        desc="Tokenizing eval data"
-    )
+
+    if len(eval_dataset) > 0:
+        eval_dataset = eval_dataset.map(
+            lambda examples: tokenize_function(examples, tokenizer, config.max_length),
+            batched=True,
+            remove_columns=columns_to_remove,
+            desc="Tokenizing eval data"
+        )
+    else:
+        # Create an empty dataset with the right structure
+        eval_dataset = train_dataset.select([])  # Empty dataset with same structure
+        print("Warning: eval_dataset is empty, using empty dataset with train structure")
     
     print(f"\nDataset preparation complete:")
     print(f"  Train dataset: {len(train_dataset)} samples")

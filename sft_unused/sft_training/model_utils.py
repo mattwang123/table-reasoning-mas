@@ -128,16 +128,19 @@ def save_model_and_tokenizer(model, tokenizer, output_dir: str):
     import json
     from datetime import datetime
     
-    training_info = {
-        "model_name": model.config.name_or_path if hasattr(model.config, 'name_or_path') else "unknown",
-        "training_completed": datetime.now().isoformat(),
-        "lora_config": {
-            "r": model.peft_config['default'].r,
-            "lora_alpha": model.peft_config['default'].lora_alpha,
-            "target_modules": model.peft_config['default'].target_modules,
-            "lora_dropout": model.peft_config['default'].lora_dropout,
-        }
-    }
+    def make_json_serializable(obj):
+        if isinstance(obj, set):
+            return list(obj)
+        elif isinstance(obj, dict):
+            return {k: make_json_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [make_json_serializable(item) for item in obj]
+        else:
+            return obj
+
+    # Apply the conversion before saving
+    training_info = make_json_serializable(training_info)
+    json.dump(training_info, f, indent=2)
     
     with open(f"{output_dir}/training_info.json", 'w') as f:
         json.dump(training_info, f, indent=2)

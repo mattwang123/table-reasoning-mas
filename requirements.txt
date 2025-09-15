@@ -1,0 +1,36 @@
+# Core ML frameworks
+torch>=2.0.0
+transformers>=4.35.0
+datasets>=2.14.0
+
+# LoRA and model optimization
+peft>=0.6.0
+accelerate>=0.24.0
+
+# Distributed training
+deepspeed>=0.12.0
+
+# OpenRLHF - the main framework we're using
+openrlhf>=0.2.8
+
+# Logging and monitoring
+wandb
+
+# Basic utilities
+numpy
+pandas
+tqdm
+
+# Optional but recommended for performance
+flash-attn>=2.3.0
+
+# JSON handling (usually included with Python)
+# Standard library modules we use:
+# - json (built-in)
+# - os (built-in) 
+# - sys (built-in)
+# - re (built-in)
+# - random (built-in)
+# - datetime (built-in)
+# - typing (built-in)
+# - collections (built-in)

@@ -9,11 +9,11 @@ from tqdm import tqdm
 import torch
 import os
 
-from utils_vllm import (
+from agents.utils_vllm import (
     load_single_model_vllm, unload_model, print_gpu_info
 )
 
-from agents_vllm import ReasoningAgent, CoderAgent
+from agents.agents_vllm import ReasoningAgent, CoderAgent
 
 def setup_logging(output_dir: str, timestamp: str, agent_type: str) -> logging.Logger:
     """Setup logging"""
@@ -550,7 +550,7 @@ class VllmDataCollector:
             return
         
         # Use the exact same analysis function from original
-        from utils_vllm import analyze_agreement, print_analysis, log_to_file
+        from agents.utils_vllm import analyze_agreement, print_analysis, log_to_file
         
         stats = analyze_agreement(results)
         
@@ -580,7 +580,7 @@ def combine_separate_results(reasoning_file: str, coder_file: str, output_dir: s
                            dataset_path: str, target_samples: int = None) -> str:
     """Utility function to combine results from separate runs with reanalysis"""
     
-    from utils_vllm import normalize_prediction, extract_code_prediction, analyze_agreement, print_analysis
+    from agents.utils_vllm import normalize_prediction, extract_code_prediction, analyze_agreement, print_analysis
     
     print("Loading reasoning results...")
     reasoning_results = []
