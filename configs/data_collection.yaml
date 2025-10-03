@@ -1,0 +1,51 @@
+# Data Collection Configuration
+
+# Collection settings
+collection:
+  batch_size: 16
+  enable_debug: true
+  debug_rounds: 3
+  max_tokens: 3000
+  output_dir: "data/collected"
+
+# Data settings
+data:
+  indices_file: "data/sample_indices_10000_42_20250821_210255.json"
+  target_samples: 10000
+  seed: 42
+  collected_dir: "data/collected"
+  combined_dir: "data/combined"  # For combine_and_analyze.py output
+
+# Generation settings
+generation:
+  temperature: 0.3
+  top_p: 0.9
+  reasoning_max_tokens: 2048
+  code_max_tokens: 2048
+  verifier_max_tokens: 1024
+
+# Model configurations
+models:
+  reasoning: "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+  coder: "Qwen/Qwen2.5-Coder-14B-Instruct"
+  verifier: "Qwen/Qwen2.5-7B-Instruct"
+
+# VLLM settings
+vllm:
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.7
+  trust_remote_code: true
+  max_model_len: 4096
+  disable_log_stats: true
+  max_num_seqs: 16
+
+# Prompts
+prompts:
+  reasoning_prompt: "prompts/reasoning_prompt.txt"
+  coder_prompt: "prompts/coder_prompt.txt"
+  verifier_prompt: "prompts/verifier_prompt.txt"
+
+# Logging
+logging:
+  level: "INFO"
+  save_logs: true

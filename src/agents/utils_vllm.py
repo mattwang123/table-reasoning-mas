@@ -49,7 +49,7 @@ def query_llm_vllm(llm: LLM, prompt: str, max_tokens: int = 1000) -> str:
     """Query VLLM model"""
     
     sampling_params = SamplingParams(
-        temperature=0.1,
+        temperature=0.3,  # Changed from 0.1 to 0.3
         top_p=0.9,
         max_tokens=max_tokens,
         stop=None,

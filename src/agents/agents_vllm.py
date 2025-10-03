@@ -1,6 +1,6 @@
 import textwrap
 from typing import Tuple, List, Dict, Optional, Any
-from utils_vllm import (
+from .utils_vllm import (
     query_llm_vllm, load_prompt, normalize_prediction, 
     extract_code, extract_code_prediction, execute_code
 )

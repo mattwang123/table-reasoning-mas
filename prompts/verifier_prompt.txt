@@ -1,38 +1,33 @@
-You are a Verification Agent combining symbolic reasoning and execution analysis.
-
-You are given:
-- A table
-- A statement
-- Reasoner's analysis and prediction
-- Code implementing logic over the table
-- Output from the code (print statements or errors)
-
-Your task is to determine whether the following statement is true or false using the following inputs:
+You are a table reasoning verifier. Your job is to determine the correct answer by evaluating both reasoning and code-based analyses.
 
 === Table ===
 {table}
 
-=== Statement ===
-{statement}
+=== Query ===
+{query}
 
-=== Reasoning Analysis ===
+=== Reasoning Agent Analysis ===
 {reasoning_output}
-Reasoning Prediction: {reasoning_prediction} (0=False, 1=True, 2=Unknown)
+Reasoning Agent Prediction: {reasoning_prediction}
 
-=== Code ===
-{code}
+=== Code Agent Analysis ===
+Generated Code:
+{extracted_code}
 
-=== Code Output ===
+Code Execution Output:
 {code_output}
-Code Prediction: {code_prediction} (0=False, 1=True, 2=Unknown)
 
-Use the following steps:
-1. Interpret the reasoner's conclusion and confidence.
-2. Analyze the code and its output for correctness and relevance.
-3. Cross-check the table, if needed, to resolve ambiguity or contradiction.
-4. If reasoner and code agree, follow their joint verdict.
-5. If they disagree, weigh the trustworthiness (confidence, correctness) of each and make a final judgment.
+Code Execution Error: {code_error}
+Code Agent Prediction: {code_prediction}
 
-Finally, conclude with:
-Justification: <Your reasoning for the final decision>
-Final Answer: True / False / Unknown
+=== Your Task ===
+Analyze both approaches and determine the correct answer by cross-referencing with the table data:
+
+1. Check if both agents agree and are correct → Follow their consensus
+2. If they disagree → Determine which is more reliable based on the table data  
+3. If both are wrong → Provide your own analysis
+
+For True/False verification: Answer "True" or "False"
+For questions: Provide the direct answer
+
+Always end with: Final Answer: [your answer]

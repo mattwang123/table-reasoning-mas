@@ -1,0 +1,29 @@
+# Data Processing Configuration
+
+# Data paths - UPDATE THESE WITH YOUR ACTUAL FILE PATHS
+data:
+  # Input: the combined database file from combine_and_analyze.py
+  combined_database_file: "data/combined/combined_analyzed_database_20250930_154657.jsonl"
+  
+  # Output directories
+  training_dir: "data/training"
+  
+  # Final training files
+  train_file: "data/training/train_dataset.jsonl"
+  eval_file: "data/training/eval_dataset.jsonl"
+
+# Processing settings
+processing:
+  sample_filter: "all"  # all, disagreement_only, hard_only, both_wrong_only
+  train_split: 0.3
+  eval_split: 0.7
+  seed: 42
+
+# Prompts
+prompts:
+  verifier_prompt: "prompts/verifier_prompt.txt"
+
+# Logging
+logging:
+  level: "INFO"
+  save_logs: true

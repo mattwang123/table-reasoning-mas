@@ -33,24 +33,20 @@ Instructions:
 - For statements to verify: Answer "True" or "False" 
 - For questions to answer: Provide the direct answer from the table
 - You may explain your reasoning first
-- Always conclude with: Final Answer: [your answer]
-
-Ground Truth: {ground_truth}"""
+- Always conclude with: Final Answer: [your answer]"""
 
 def convert_prediction_to_text(prediction) -> str:
     """Convert predictions to text format"""
     if isinstance(prediction, (int, float)):
-        return "True" if prediction == 1 else ("False" if prediction == 0 else str(prediction))
+        return "True" if prediction == 1 else ("False" if prediction == 0 else "Unknown")
     else:
-        pred_str = str(prediction).strip()
-        # For boolean cases
-        if pred_str.lower() in ["true", "1"]:
+        pred_str = str(prediction).strip().lower()
+        if pred_str in ["true", "1"]:
             return "True"
-        elif pred_str.lower() in ["false", "0"]:
+        elif pred_str in ["false", "0"]:
             return "False"
         else:
-            # For open-ended answers, preserve original format
-            return pred_str
+            return pred_str.title()
 
 def format_table(table_data) -> str:
     """Format table data into readable string format"""
@@ -208,17 +204,13 @@ def find_collected_data_files(base_dir: str = "../..") -> Dict[str, str]:
     return files_found
 
 def create_reinforce_dataset(samples: List[Dict]) -> List[Dict]:
-    """Create REINFORCE dataset from collected agent data with embedded ground truth"""
+    """Create REINFORCE dataset from collected agent data"""
     print(f"🎯 Creating REINFORCE dataset from {len(samples)} collected samples...")
     
     reinforce_samples = []
     
     for sample in samples:
         try:
-            # Convert ground truth to proper format
-            ground_truth = convert_prediction_to_text(sample["label"])
-            
-            # Create prompt with embedded ground truth
             prompt = VERIFIER_PROMPT_TEMPLATE.format(
                 table=format_table(sample["table_text"]),
                 query=sample["statement"],
@@ -227,14 +219,14 @@ def create_reinforce_dataset(samples: List[Dict]) -> List[Dict]:
                 extracted_code=clean_text(sample.get("extracted_code", "")),
                 code_output=clean_text(sample.get("code_output", "")),
                 code_error=clean_text(sample.get("code_error", "None")),
-                code_prediction=convert_prediction_to_text(sample["code_prediction"]),
-                ground_truth=ground_truth  # Embed ground truth in prompt
+                code_prediction=convert_prediction_to_text(sample["code_prediction"])
             )
+            
+            ground_truth = convert_prediction_to_text(sample["label"])
             
             reinforce_samples.append({
                 "prompt": prompt,
-                "ground_truth": ground_truth,  # Also keep separate for reference
-                "sample_id": sample.get("sample_id", len(reinforce_samples))
+                "ground_truth": ground_truth
             })
             
         except Exception as e:
@@ -242,11 +234,6 @@ def create_reinforce_dataset(samples: List[Dict]) -> List[Dict]:
             continue
     
     print(f"✅ Created {len(reinforce_samples)} REINFORCE samples")
-    print(f"📋 Sample prompt preview (first 300 chars):")
-    if reinforce_samples:
-        print(reinforce_samples[0]["prompt"][:300] + "...")
-        print(f"Ground Truth: {reinforce_samples[0]['ground_truth']}")
-    
     return reinforce_samples
 
 def save_dataset(samples: List[Dict], output_file: str):
@@ -258,12 +245,3 @@ def save_dataset(samples: List[Dict], output_file: str):
             f.write(json.dumps(sample, ensure_ascii=False) + '\n')
     
     print(f"✅ Saved {len(samples)} samples to {output_file}")
-
-# Compatibility functions for existing interface
-def load_data(file_path: str) -> List[Dict]:
-    """Load data (compatible with existing interface)"""
-    return load_collected_agent_data(file_path)
-
-def preprocess_data(sample: Dict) -> Dict:
-    """Preprocess individual sample (compatible with existing interface)"""
-    return sample
