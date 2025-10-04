@@ -366,7 +366,7 @@ def create_training_data_from_database(database_file: str,
                                      output_dir: str = "data/training",
                                      prompt_file: str = "prompts/verifier_prompt.txt",
                                      sample_filter: str = "all",
-                                     test_split: float = 0.15):
+                                     test_split: float = 0.05):
     """
     Main function to create training data from database
     
